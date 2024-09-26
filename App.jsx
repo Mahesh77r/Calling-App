@@ -1,10 +1,29 @@
-import React, { useState } from 'react';
+import React, { useState,useEffect } from 'react';
 import { View, Text, TouchableOpacity, PermissionsAndroid, TextInput, StyleSheet, Alert } from 'react-native';
 import SendIntentAndroid from 'react-native-send-intent';
+import InCallScreen from './app/CallWindow';
+import InCallManager from 'react-native-incall-manager';
 
 const App = () => {
   const [phoneNumber, setPhoneNumber] = useState('');
   const [isDialerOpen, setIsDialerOpen] = useState(false); // To toggle dialer screen
+  const [isCallWindowOpen, setIsCallWindowOpen] = useState(false); // To toggle dialer screen
+
+  useEffect(() => {
+    // Acquire wake lock during calls or media sessions
+    InCallManager.setKeepScreenOn(true);
+    
+    return () => {
+      // Always release the wake lock when done
+      InCallManager.setKeepScreenOn(false);
+    };
+  }, []);
+
+  const endCall = () => {
+    InCallManager.stop();
+    console.log("Ended")
+    setIsCallWindowOpen(false)
+  }
 
   // Function to handle number button press
   const handleNumberPress = (number) => {
@@ -57,6 +76,8 @@ const App = () => {
     const permissionGranted = await requestCallPermission();
     if (permissionGranted && phoneNumber) {
       SendIntentAndroid.sendPhoneCall(phoneNumber, true);
+      // InCallManager.start({media:'audio'})
+      setIsCallWindowOpen(true)
     } else if (!phoneNumber) {
       Alert.alert("Enter a phone number", "Please enter a phone number before dialing.");
     } else {
@@ -68,7 +89,13 @@ const App = () => {
   const directCall = async (num) => {
     const permissionGranted = await requestCallPermission();
     if (permissionGranted && num) {
-      SendIntentAndroid.sendPhoneCall(num, true);
+      InCallManager.start({ media: 'audio' });
+      InCallManager.setForceSpeakerphoneOn(true);
+      InCallManager.setKeepScreenOn(true);
+      SendIntentAndroid.sendPhoneCall(num, false);
+
+
+      setIsCallWindowOpen(true);
     } else if (!num) {
       Alert.alert("Enter a phone number", "Please enter a phone number before dialing.");
     } else {
@@ -144,8 +171,19 @@ const App = () => {
           <TouchableOpacity style={styles.backButton} onPress={() => setIsDialerOpen(false)}>
             <Text style={styles.backButtonText}>Back</Text>
           </TouchableOpacity>
+
+
         </>
       )}
+      
+      {
+        isCallWindowOpen ? (
+          <>
+            <InCallScreen phoneNumber={phoneNumber} endCall={endCall} />
+          </>
+        ) :
+          (<></>)
+      }
     </View>
   );
 };
