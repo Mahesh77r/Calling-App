@@ -3,7 +3,10 @@ import { View, Text, TouchableOpacity, PermissionsAndroid, TextInput, StyleSheet
 import SendIntentAndroid from 'react-native-send-intent';
 import InCallScreen from './app/CallWindow';
 import InCallManager from 'react-native-incall-manager';
+import { NativeModules } from 'react-native';
+import { checkPermissions} from './utils/PhoneService'
 
+const {CallScreeningModule } = NativeModules
 const App = () => {
   const [phoneNumber, setPhoneNumber] = useState('');
   const [isDialerOpen, setIsDialerOpen] = useState(false); // To toggle dialer screen
@@ -25,6 +28,9 @@ const App = () => {
     setIsCallWindowOpen(false)
   }
 
+  useEffect(()=>{
+    checkPermissions(CallScreeningModule)
+  },[])
   // Function to handle number button press
   const handleNumberPress = (number) => {
     setPhoneNumber((prev) => prev + number);
