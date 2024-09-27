@@ -1,39 +1,37 @@
 import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, PermissionsAndroid, TextInput, StyleSheet, Alert } from 'react-native';
 import SendIntentAndroid from 'react-native-send-intent';
+import { NavigationContainer } from '@react-navigation/native';
+import { createStackNavigator } from '@react-navigation/stack';
+import CallLogsPage from './app/CallLogs';
+const Stack = createStackNavigator();
 
-const App = () => {
+const HomeScreen = ({ navigation }) => {
   const [phoneNumber, setPhoneNumber] = useState('');
-  const [isDialerOpen, setIsDialerOpen] = useState(false); // To toggle dialer screen
+  const [isDialerOpen, setIsDialerOpen] = useState(false);
 
-  // Function to handle number button press
   const handleNumberPress = (number) => {
     setPhoneNumber((prev) => prev + number);
   };
 
-  // Function to clear the entered number
   const clearPhoneNumber = () => {
     setPhoneNumber('');
   };
 
-  // Function to remove the last entered digit
   const backspace = () => {
     setPhoneNumber((prev) => prev.slice(0, -1));
   };
 
-  // Opens the custom dialer with an empty field
   const openCustomDialerEmpty = () => {
-    setPhoneNumber(''); // Reset phone number
-    setIsDialerOpen(true); // Open the dialer
+    setPhoneNumber('');
+    setIsDialerOpen(true);
   };
 
-  // Opens the custom dialer with a pre-filled number
   const openCustomDialerWithNumber = () => {
-    setPhoneNumber('+91 9119515866'); // Pre-fill with a number
-    setIsDialerOpen(true); // Open the dialer
+    setPhoneNumber('+91 9119515866');
+    setIsDialerOpen(true);
   };
 
-  // Request permission to make a call
   const requestCallPermission = async () => {
     try {
       const granted = await PermissionsAndroid.request(
@@ -52,7 +50,6 @@ const App = () => {
     }
   };
 
-  // Function to initiate the call
   const initiateCall = async () => {
     const permissionGranted = await requestCallPermission();
     if (permissionGranted && phoneNumber) {
@@ -64,7 +61,6 @@ const App = () => {
     }
   };
 
-  // Direct call function
   const directCall = async (num) => {
     const permissionGranted = await requestCallPermission();
     if (permissionGranted && num) {
@@ -76,7 +72,6 @@ const App = () => {
     }
   };
 
-  // Custom Dial Pad UI
   const renderDialPad = () => {
     const numbers = [
       ['1', '2', '3'],
@@ -100,23 +95,25 @@ const App = () => {
     <View style={styles.container}>
       {!isDialerOpen ? (
         <>
-          {/* Direct Call */}
           <TouchableOpacity style={styles.actionButton} onPress={() => directCall('9119515866')}>
             <Text style={styles.actionButtonText}>Direct Call</Text>
           </TouchableOpacity>
-          {/* Button to open dialer with empty field */}
+
           <TouchableOpacity style={styles.actionButton} onPress={openCustomDialerEmpty}>
             <Text style={styles.actionButtonText}>Open Dialer with Empty Field</Text>
           </TouchableOpacity>
 
-          {/* Button to open dialer with pre-filled number */}
           <TouchableOpacity style={styles.actionButton} onPress={openCustomDialerWithNumber}>
             <Text style={styles.actionButtonText}>Open Dialer with Filled Number</Text>
+          </TouchableOpacity>
+
+          {/* New button to navigate to Call Logs */}
+          <TouchableOpacity style={styles.actionButton} onPress={() => navigation.navigate('CallLogs')}>
+            <Text style={styles.actionButtonText}>Go to Call Logs</Text>
           </TouchableOpacity>
         </>
       ) : (
         <>
-          {/* Display the entered phone number */}
           <View style={styles.inputContainer}>
             <TextInput
               style={styles.input}
@@ -132,21 +129,29 @@ const App = () => {
             </TouchableOpacity>
           </View>
 
-          {/* Dial pad */}
           {renderDialPad()}
 
-          {/* Call Button */}
           <TouchableOpacity style={styles.callButton} onPress={initiateCall}>
             <Text style={styles.callText}>Call</Text>
           </TouchableOpacity>
 
-          {/* Back Button to close dialer */}
           <TouchableOpacity style={styles.backButton} onPress={() => setIsDialerOpen(false)}>
             <Text style={styles.backButtonText}>Back</Text>
           </TouchableOpacity>
         </>
       )}
     </View>
+  );
+};
+
+const App = () => {
+  return (
+    <NavigationContainer>
+      <Stack.Navigator>
+        <Stack.Screen name="Home" component={HomeScreen} />
+        <Stack.Screen name="CallLogs" component={CallLogsPage} />
+      </Stack.Navigator>
+    </NavigationContainer>
   );
 };
 
